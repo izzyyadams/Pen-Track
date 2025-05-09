@@ -1,5 +1,9 @@
+
+
 let penColor;
 let ballColor;
+let poleColor;
+let flagColor;
 let cursor;
 let coordinates;
 let strokeSize;
@@ -16,21 +20,31 @@ let origBallX;
 let origBallY;
 let indexOfBall;
 let upwardForce;
+let backgroundColor;
+let win;
+let prevPosition;
+let drawingFlag;
+
 
 
 function setup() {
   noCursor(); //hide standard cursor
   createCanvas(windowWidth, windowHeight);
-  
+
+  win = false;
+
+  backgroundColor = color(233, 224, 217); //off-white
   penColor = color(0, 173, 239); //blue
   ballColor = color(237, 0, 140); //pink
+  poleColor = color(139, 94, 59); //brown
+  flagColor = color(5, 166, 81); //green
   coordinates = []; //array to store mouse x and y coordinates in {} (since no tuples in js)
   strokeSize = 20; //pen stroke
   start = true; //ball should start in starting position
   drop = false; //ball shouldn't fall until later
   ballSize = 30; //size of ball
   hasInk = true; //start with ink to use
-  inkLimit = 300; //most ink you can use
+  inkLimit = 200; //most ink you can use
   origBallX = windowWidth/8; //ball starting point
   origBallY = windowHeight/3;
   position = createVector(origBallX, origBallY); // initial ball position
@@ -39,6 +53,8 @@ function setup() {
   gravity = createVector(0, 0.2); // no x change, but y has downward force
   indexOfBall = 0; //will be used to see if ball is hitting path
   upwardForce = createVector(0, 0.2); //resulting from drawn line
+  prevPosition = position.copy();
+  drawingFlag = true;
 
 
 }
@@ -50,10 +66,20 @@ function preload(){
 
 
 function draw() {
-  background(233, 224, 217);
+  background(backgroundColor);
   pen();
   image(cursor, mouseX - 20, mouseY); //draw cursor image at user's mouse
-  
+  inkContainer();
+
+  if(win) { 
+    drawingFlag = false;
+  }
+
+  if (drawingFlag){
+    drawFlag(windowWidth - 300, windowHeight -300);
+  }
+
+ 
   //switches for when the ball drops
   if (drop) {
     start = false;
@@ -108,6 +134,19 @@ function ballDrop() {
       let lineSegmentDirection = lineSegment.copy().normalize(); //gets only the direction of the line segement between point1 and point2
       let slidingForce = lineSegmentDirection.mult(gravity.dot(lineSegmentDirection)); //projecting gravity onto direction of the line segment to have it push down and to the side downt the line instead of just down
       acceleration.add(slidingForce);
+
+
+      //the shortest vector that can separate two colliding objects so ball doesn't go into line
+      //i used this video for basic concept, but not code since it was about when morethan one object could move
+      //https://youtu.be/9IULfQH7E90?feature=shared 1:00 - 1:20
+      //direction from line point to center of ball
+      let normalSurface = position.copy().sub(closestPoint);
+      //magnitude one, only care about direction
+      let unitNormalSurface = normalSurface.normalize();
+      //scale by penetration so it pushes out same amount it entered the line by
+      let pushBack = unitNormalSurface.mult(ballSize - distance);
+      //pushes ball back out of line so it doesn't keep colliding and looks more normal
+      position.add(pushBack);
     }
   }
   
@@ -115,6 +154,8 @@ function ballDrop() {
 
   acceleration.add(gravity); //ball acclerates due to gravity
   velocity.add(acceleration); //ball's speed changes based on accleration
+  velocity.mult(0.99); //air resistance OR path resitance, velocity would naturally slow down over time
+  prevPosition = position.copy();
   position.add(velocity); //ball's position changes by its velocity
   acceleration.mult(0); // otherwise acceleration will increase with each frame
   fill(ballColor);
@@ -135,4 +176,63 @@ function pen() {
 
 function mouseReleased() {
   drop = true; //once the user releases the mouse, ball should drop
+}
+
+function drawFlag(startX, startY) {
+  let poleHeight = startY - 125;
+  noFill();
+  stroke(poleColor);
+  strokeWeight(25);
+  line(startX, startY, startX, poleHeight);
+  stroke(flagColor);
+  triangle(startX, poleHeight, startX, poleHeight + 25, startX + 50, poleHeight + 12);
+
+
+  //CHECK IF BALL CROSSES
+  win = flagCrossed(prevPosition, position, createVector(startX, startY), createVector(startX, poleHeight));
+
+  
+
+}
+
+function inkContainer() {
+  let containerHeight =  100;
+  let containerWidth = 30;
+  let containerX = mouseX + 50;
+  let containerY = mouseY + 75;
+  let inkHeight = containerHeight - ((coordinates.length)/inkLimit) * containerHeight; //full height to start, subtract by comparing used ink to ink limit times the full height
+  stroke(0,0,0);
+  strokeWeight(5);
+  fill(backgroundColor);
+  //draw rect same color as background for emoy container
+  rectMode(CORNER);
+  rect(containerX, containerY, containerWidth, containerHeight, 20);
+  if (hasInk) {
+    //if there is ink left (avoid drawing empty rectangle)
+    strokeWeight(2);
+    fill(penColor);
+    //starting corner should move down as ink is lost
+    rect(containerX, containerY + ((coordinates.length)/inkLimit) * containerHeight, containerWidth, inkHeight, 20);
+  }
+
+
+
+}
+
+
+
+function flagCrossed(prevPosition, currentPosition, point1, point2) {
+  // find which of line ball was on previously
+  let pole = point2.copy().sub(point1); //vector of flag pole
+  let prevBallToPole = prevPosition.copy().sub(point1); //vector from ball's previous position to flagpole
+  //cross product gives rotation
+  let sidePrev = pole.x * prevBallToPole.y - pole.y * prevBallToPole.x; //only need positive or negative to show one side of the line or the other
+  //line of vector points opposite direction once line is passed
+
+  // find which of line ball was on now
+  let postBallToPole = currentPosition.copy().sub(point1);
+  let sideCurr = pole.x * postBallToPole.y - pole.y * postBallToPole.x;
+
+  // sign changed = crossed
+  return sidePrev * sideCurr < 0; 
 }
