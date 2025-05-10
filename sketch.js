@@ -33,10 +33,27 @@ let level4Switch;
 let level5Switch;
 let level6Switch;
 let winnerSwitch;
-let loserSwitch;
 let levelButtons = [];
 let restartImage;
-let restartScreenSwitch;
+let restartScreenSwitch1;
+let restartScreenSwitch2;
+let restartScreenSwitch3;
+let restartScreenSwitch4;
+let restartScreenSwitch5;
+let restartScreenSwitch6;
+let homeImage;
+let winSound;
+let soundPlayed;
+let startTime;
+let level1Inputs;
+let level2Inputs;
+let level3Inputs;
+let winds = [];
+let windSound;
+let windSoundPlayed;
+let level4Inputs;
+let noDrawZones = [];
+
 
 
 class levelButton {
@@ -60,17 +77,77 @@ class levelButton {
   }
 }
 
+class windStreak {
+  constructor() {
+    this.x = random(windowWidth);
+    this.y = random(windowHeight);
+    this.lengthy = random(10,25);
+    this.speed = random(0.5, 3);
+  }
+
+  display() {
+    stroke(141, 153, 174); 
+    strokeWeight(3);
+    line(this.x, this.y, this.x+this.lengthy, this.y);
+  }
+
+  update() {
+    this.x -= this.speed;
+    if (this.x > windowWidth + this.lengthy) {
+      this.x = -this.lengthy;
+    }
+    if (this.x < -this.lengthy) {
+      this.x = windowWidth + this.lengthy;
+    }
+
+
+  }
+}
+
+class noDrawingZone {
+  constructor(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+  }
+  display() {
+    fill(255, 0, 0, 128);
+    noStroke();
+    rectMode(CENTER);
+    rect(this.x, this.y, this.width, this.height);
+  }
+}
 
 
 function setup() {
   noCursor(); //hide standard cursor
   createCanvas(windowWidth, windowHeight);
 
-  for (let i = 0; i <  2; i++ ){
-    for ( let j = 0; j < 3; j ++ ) {
-      levelButtons.push(new levelButton(windowWidth/4 + (200 *j), windowHeight/2 + (i * 200), i* 3 + j + 1));
-    }
+  for (let i = 0; i < 10; i++) {
+    winds.push(new windStreak);
   }
+
+let rows = 2; 
+let cols = 3;
+let spacing = 200; // spacing horizontally and vertically between level boxes
+
+let gridWidth = (cols - 1) * spacing; //need this to not hard code coorindates
+let gridHeight = (rows - 1) * spacing;
+
+let startX = windowWidth / 2 - gridWidth / 2; //center of screen minus half the width of the grid is the starting point for it to be centered
+let startY = windowHeight / 2 - gridHeight / 2;
+
+for (let i = 0; i < rows; i++) {
+  for (let j = 0; j < cols; j++) {
+    let x = startX + j * spacing; //column spacing
+    let y = startY + i * spacing; //row spacing
+    let levelNum = i * cols + j + 1; //index of level +1 because indexing starts at 0
+    levelButtons.push(new levelButton(x, y, levelNum));
+  }
+}
+
+noDrawZones.push(new noDrawingZone(windowWidth/2, windowHeight/2, 300, windowHeight));
 
   startScreenSwitch = true;
 
@@ -104,8 +181,21 @@ function setup() {
   level4Switch = false;
   level5Switch = false;
   level6Switch = false;
-  restartScreenSwitch = false;
-  
+  restartScreenSwitch1 = false;
+  restartScreenSwitch2 = false;
+  restartScreenSwitch3 = false;
+  restartScreenSwitch4 = false;
+  restartScreenSwitch5 = false;
+  restartScreenSwitch6 = false;
+  soundPlayed = false;
+  startTime = 0;
+  level1Inputs = [windowWidth/8, windowHeight/4, (windowWidth/8)*6, (windowHeight/4)*3, 250, 0];
+  level2Inputs = [(windowWidth/8)*3, windowHeight/3, (windowWidth/8)*5, (windowHeight/8)*3.1, 100, 0];
+  level3Inputs = [(windowWidth/8)*2, windowHeight/3, (windowWidth/8)*5.5, (windowHeight/4)*3.5, 250, 0.07];
+  level4Inputs = [(windowWidth/8)*2, windowHeight/3, (windowWidth/8)*5.5, (windowHeight/4)*3.5, 250, 0];
+  winnerSwitch = false;
+  windSoundPlayed = false;
+
 
 
 }
@@ -113,7 +203,10 @@ function setup() {
 function preload(){
   cursor =  loadImage('data/cursor.png'); //load cursor image
   mainFont = loadFont('data/Jua-Regular.ttf'); //loading font
-  restartImage = loadImage('data/restart.png')
+  restartImage = loadImage('data/restart.png');
+  homeImage = loadImage('data/house.png');
+  winSound = loadSound('data/winSound.mp3');
+  windSound = loadSound('data/wind.mp3');
 }
 
 
@@ -121,9 +214,29 @@ function preload(){
 function draw() {
   background(backgroundColor);
 
-  if (restartScreenSwitch) {
+  if (restartScreenSwitch1) {
+    restartScreen(level1Inputs[0], level1Inputs[1]);
+    restartScreenSwitch1 = false;
+  }
+  if (restartScreenSwitch2) {
+    restartScreen(level2Inputs[0], level2Inputs[1]);
+    restartScreenSwitch2 = false;
+  }
+  if (restartScreenSwitch3) {
+    restartScreen(level3Inputs[0], level3Inputs[1]);
+    restartScreenSwitch3 = false;
+  }
+  if (restartScreenSwitch4) {
+    restartScreen(level4Inputs[0], level4Inputs[1]);
+    restartScreenSwitch4 = false;
+  }
+  if (restartScreenSwitch5) {
     restartScreen();
-    restartScreenSwitch = false;
+    restartScreenSwitch5 = false;
+  }
+  if (restartScreenSwitch6) {
+    restartScreen();
+    restartScreenSwitch6 = false;
   }
 
   if (startScreenSwitch){
@@ -135,7 +248,32 @@ function draw() {
   }
 
   if (level1Switch) {
-    level();
+    level1();
+  }
+  if (level2Switch) {
+    level2();
+  }
+
+  if (level3Switch) {
+    level3();
+  }
+
+  if(level4Switch) {
+    level4();
+  }
+
+  
+
+  if (winnerSwitch) {
+    won();
+    
+    elapsedTime = (millis() - startTime) /1000;
+    if (elapsedTime >= 3) {
+      levelSelectSwitch = true;
+      winnerSwitch = false;
+      win = false;
+    }
+
   }
   image(cursor, mouseX - 20, mouseY); //draw cursor image at user's mouse
   
@@ -147,19 +285,28 @@ function mouseDragged(){
   //mouseDragged works while button is pressed and mouse is moving
   //pushes mouse's coordinates onto array an array
   //general strategy of having the mouse draw used from class, but I am not directly looking at the code while wriitng this
+  if (
+    mouseX > noDrawZones[0].x - (noDrawZones[0].width/2) &&
+    mouseX < noDrawZones[0].x + (noDrawZones[0].width/2)
+    
+  ) {
+    print("HI");
+    return; 
+  }
+
   if(hasInk){
     coordinates.push({x: mouseX, y: mouseY}); 
     
   }
 }
 
-function ballStart() {
+function ballStart(ballX, ballY) {
   fill(ballColor);
   stroke(ballColor);
-  circle(origBallX, origBallY, ballSize);
+  circle(ballX, ballY, ballSize);
 }
 
-function ballDrop() {
+function ballDrop(wind) {
   //I watched the Coding Train Nature of Code to help me understand vectors, but didn't directly use code
   //any upwards forces caused by path
   for(let i = 0; i < coordinates.length - 1; i++){
@@ -195,7 +342,8 @@ function ballDrop() {
     }
   }
   
-
+  let windVector = createVector(-wind, 0);
+  acceleration.add(windVector);
 
   acceleration.add(gravity); //ball acclerates due to gravity
   velocity.add(acceleration); //ball's speed changes based on accleration
@@ -238,7 +386,7 @@ function drawFlag(startX, startY) {
 
 
   //CHECK IF BALL CROSSES
-  win = flagCrossed(prevPosition, position, createVector(startX, startY), createVector(startX, poleHeight));
+  win = flagCrossed(prevPosition, position, createVector(startX, startY + 50), createVector(startX, poleHeight));
 
   
 
@@ -283,16 +431,34 @@ function flagCrossed(prevPosition, currentPosition, point1, point2) {
   let sideCurr = pole.x * postBallToPole.y - pole.y * postBallToPole.x;
 
   // sign changed = crossed
-  return sidePrev * sideCurr < 0; 
+  let lineCrossed = sidePrev * sideCurr < 0; 
+
+  //this checks if it crosses a line going across the entire height of the screen, but we need to make sure the y is limited
+  //perform the same test as above but horizontally to see if the top of the flag and the bottom of the flag are on opposite sides of the ball
+  let ballsMovement = currentPosition.copy().sub(prevPosition); //vector from previous to current ball position
+  let prevToTop = point1.copy().sub(prevPosition); //previous position posotion to top point of flag
+  let prevToBottom = point2.copy().sub(prevPosition); //previous position posotion to bottom point of flag
+  let inA = ballsMovement.x * prevToTop.y - ballsMovement.y * prevToTop.x; //should be pointing up to top
+  let inB = ballsMovement.x * prevToBottom.y - ballsMovement.y * prevToBottom.x; //should be pointing down to bottom
+
+  let segementsCross = inA * inB < 0; //if oppsoite then must be inbetween the 2 points (in the flag segment)
+
+
+  return lineCrossed && segementsCross;
 }
 
-function restartScreen() {
-  coordinates = [];
-  drop = false;
-  start = true;
+function restartScreen(origBallX, origBallY) {
   position = createVector(origBallX, origBallY); 
   velocity = createVector(0,0); 
   acceleration = createVector(0,0);
+  coordinates = [];
+  win = false;
+  drop = false;
+  drawingFlag = true;
+  start = true;
+  hasInk = true;
+  soundPlayed = false;
+
 }
 
 
@@ -317,7 +483,7 @@ function startScreen() {
   pen(500);
   if (drop) {
     start = false;
-    ballDrop(); 
+    ballDrop(0); 
   }
   if(start){
     ballStart();
@@ -340,40 +506,120 @@ function levelSelect() {
 
 }
 
-function level() {
-  image(restartImage, windowWidth - 50, 25, 50, 50);
-  pen(200);
-  if(win) { 
-    drawingFlag = false;
+function level1() {
+  level(level1Inputs[0], level1Inputs[1], level1Inputs[2], level1Inputs[3], level1Inputs[4], level1Inputs[5]);
+
+}
+
+function level2() {
+  level(level2Inputs[0], level2Inputs[1], level2Inputs[2], level2Inputs[3], level2Inputs[4], level2Inputs[5]);
+}
+
+function level3() {
+  level(level3Inputs[0], level3Inputs[1], level3Inputs[2], level3Inputs[3], level3Inputs[4], level3Inputs[5]);
+}
+
+function level4() {
+  noDrawZones[0].display();
+  level(level4Inputs[0], level4Inputs[1], level4Inputs[2], level4Inputs[3], level4Inputs[4], level4Inputs[5]);
+  
+
+}
+
+function level(ballX, ballY, flagX, flagY, inkLimit, wind) {
+  if (wind > 0) {
+    for (let i = 0; i < winds.length; i ++ ) {
+      winds[i].display();
+      winds[i].update();
+      
+    }
+    if (!windSoundPlayed) {
+      windSound.loop();
+    }
+    windSoundPlayed = true;
   }
-  if (drawingFlag){
-    drawFlag(windowWidth - 300, windowHeight -300);
-  }
+  image(restartImage, windowWidth - 75, 25, 50, 50);
+  image(homeImage, 50, 25, 50, 50)
+  pen(inkLimit);
+  
+  
+
   //switches for when the ball drops
   if (drop) {
     start = false;
-    ballDrop();  
+    ballDrop(wind);  
   }
   if(start){
-    ballStart();
+    ballStart(ballX, ballY);
     drop = false;
   }
+
+  if (drawingFlag){
+    drawFlag(flagX, flagY);
+  }
+
+  if(win & !soundPlayed) { 
+    startTime = millis();
+    winSound.play();
+    soundPlayed = true;
+    drawingFlag = false;
+    winnerSwitch = true;
+    level1Switch = false;
+    level2Switch = false;
+    level3Switch = false;
+    level4Switch = false;
+    level5Switch = false;
+    level6Switch = false;
+    windSound.stop();
+  } 
 }
 
 function won () {
+  background(flagColor);
+  noStroke();
+  fill(255, 255, 255);
+  textAlign(CENTER, CENTER);
+  text("YOU WON!", windowWidth/2, windowHeight/3);
+  
 
 }
 
-function lost() {
-
-}
 
 
 function mouseClicked() {
   let goToLevel = 0;
-   if (dist(mouseX, mouseY, windowWidth - 50, 25) < 50) {
-     restartScreenSwitch = true;
+  if (!startScreenSwitch){
+   if (dist(mouseX, mouseY, windowWidth - 75, 25) < 50) {
+    if (level1Switch){
+     restartScreenSwitch1 = true;
+    }
+    if (level2Switch){
+     restartScreenSwitch2 = true;
+    }
+    if (level3Switch){
+     restartScreenSwitch3 = true;
+    }
+    if (level4Switch){
+     restartScreenSwitch4 = true;
+    }
+    if (level5Switch){
+     restartScreenSwitch5 = true;
+    }
+    if (level6Switch){
+     restartScreenSwitch6 = true;
+    }
    }
+   if (dist(mouseX, mouseY, 50, 25) < 50) {
+     levelSelectSwitch = true;
+     level1Switch = false;
+     level2Switch = false;
+     level3Switch = false;
+     level4Switch = false;
+     level5Switch = false;
+     level6Switch = false;
+     windSound.stop();
+   }
+  }
 
   //for changing from start screen when start button is pressed
   let postitX = windowWidth/2;
@@ -399,22 +645,25 @@ function mouseClicked() {
   }
 
   if (goToLevel == 1) {
-    restartScreen();
+    restartScreenSwitch1 = true;
     level1Switch = true;
     levelSelectSwitch = false;
   }
 
   if (goToLevel == 2) {
+    restartScreenSwitch2 = true;
     level2Switch = true;
     levelSelectSwitch = false;
   }
 
   if (goToLevel == 3) {
+    restartScreenSwitch3 = true;
     level3Switch = true;
     levelSelectSwitch = false;
   }
 
   if (goToLevel == 4) {
+    restartScreenSwitch4 = true;
     level4Switch = true;
     levelSelectSwitch = false;
   }
@@ -430,3 +679,5 @@ function mouseClicked() {
   }
 
 }
+
+
