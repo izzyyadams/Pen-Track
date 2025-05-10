@@ -11,7 +11,6 @@ let start;
 let drop;
 let ballSize;
 let hasInk;
-let inkLimit;
 let acceleration;
 let velocity;
 let position;
@@ -24,12 +23,55 @@ let backgroundColor;
 let win;
 let prevPosition;
 let drawingFlag;
+let mainFont;
+let startScreenSwitch;
+let levelSelectSwitch;
+let level1Switch;
+let level2Switch;
+let level3Switch;
+let level4Switch;
+let level5Switch;
+let level6Switch;
+let winnerSwitch;
+let loserSwitch;
+let levelButtons = [];
+
+
+class levelButton {
+  constructor(x, y, level) {
+    this.x = x;
+    this.y = y;
+    this.level = level;
+  }
+
+  display() {
+    stroke(0, 0, 0);
+    strokeWeight(3);
+    fill(249, 238, 228);
+    rectMode(CENTER);
+    rect(this.x, this.y, 50, 100, 20);
+    noStroke();
+    fill(ballColor);
+    textAlign(CENTER, CENTER);
+    textSize(32);
+    text(this.level, this.x, this.y);
+  }
+}
 
 
 
 function setup() {
   noCursor(); //hide standard cursor
   createCanvas(windowWidth, windowHeight);
+
+  for (let i = 0; i <  2; i++ ){
+    for ( let j = 0; j < 3; j ++ ) {
+      levelButtons.push(new levelButton(windowWidth/4 + (200 *j), windowHeight/2 + (i * 200), i* 3 + j + 1));
+    }
+  }
+
+  startScreenSwitch = true;
+
 
   win = false;
 
@@ -44,7 +86,6 @@ function setup() {
   drop = false; //ball shouldn't fall until later
   ballSize = 30; //size of ball
   hasInk = true; //start with ink to use
-  inkLimit = 200; //most ink you can use
   origBallX = windowWidth/8; //ball starting point
   origBallY = windowHeight/3;
   position = createVector(origBallX, origBallY); // initial ball position
@@ -55,42 +96,39 @@ function setup() {
   upwardForce = createVector(0, 0.2); //resulting from drawn line
   prevPosition = position.copy();
   drawingFlag = true;
+  level1Switch = false;
+  level2Switch = false;
+  level3Switch = false;
+  level4Switch = false;
+  level5Switch = false;
+  level6Switch = false;
+  
 
 
 }
 
 function preload(){
   cursor =  loadImage('data/cursor.png'); //load cursor image
+  mainFont = loadFont('data/Jua-Regular.ttf'); //loading font
 }
 
 
 
 function draw() {
   background(backgroundColor);
-  pen();
+  if (startScreenSwitch){
+    startScreen();
+  }
+
+  if (levelSelectSwitch){
+    levelSelect();
+  }
+
+  if (level1Switch) {
+    level();
+  }
   image(cursor, mouseX - 20, mouseY); //draw cursor image at user's mouse
-  inkContainer();
-
-  if(win) { 
-    drawingFlag = false;
-  }
-
-  if (drawingFlag){
-    drawFlag(windowWidth - 300, windowHeight -300);
-  }
-
- 
-  //switches for when the ball drops
-  if (drop) {
-    start = false;
-    ballDrop();
-    
-  }
   
-  if(start){
-    ballStart();
-    drop = false;
-  }
   
 
 }
@@ -101,9 +139,7 @@ function mouseDragged(){
   //general strategy of having the mouse draw used from class, but I am not directly looking at the code while wriitng this
   if(hasInk){
     coordinates.push({x: mouseX, y: mouseY}); 
-    if (coordinates.length > inkLimit) { //stop drawing when run out of ink
-      hasInk = false;
-    }
+    
   }
 }
 
@@ -115,7 +151,6 @@ function ballStart() {
 
 function ballDrop() {
   //I watched the Coding Train Nature of Code to help me understand vectors, but didn't directly use code
-  
   //any upwards forces caused by path
   for(let i = 0; i < coordinates.length - 1; i++){
     //strategy is to make a line segment between each point, find the point on this line segment that ball is closest too, and then see if they collide
@@ -164,12 +199,16 @@ function ballDrop() {
 
 }
 
-function pen() {
+function pen(inkLimit) {
+  inkContainer(inkLimit);
   stroke(penColor);
   strokeWeight(strokeSize);
   //iterates through x and y coordinate array and draws point at each coordinate
   for (let i = 0; i < coordinates.length; i ++) {
     point(coordinates[i].x, coordinates[i].y);
+  }
+  if (coordinates.length > inkLimit) { //stop drawing when run out of ink
+    hasInk = false;
   }
 
 }
@@ -195,7 +234,7 @@ function drawFlag(startX, startY) {
 
 }
 
-function inkContainer() {
+function inkContainer(inkLimit) {
   let containerHeight =  100;
   let containerWidth = 30;
   let containerX = mouseX + 50;
@@ -235,4 +274,138 @@ function flagCrossed(prevPosition, currentPosition, point1, point2) {
 
   // sign changed = crossed
   return sidePrev * sideCurr < 0; 
+}
+
+
+//function for start screem
+function startScreen() {
+  textFont(mainFont);
+  textAlign(CENTER, CENTER);
+  let postitColor = color(247, 242, 181); //yellow
+  noStroke();
+  fill(postitColor);
+  rectMode(CENTER);
+  rect(windowWidth/2, (windowHeight/10)* 7, 200, 200);
+  textSize(48);
+  fill(ballColor);
+  text("START", windowWidth/2, (windowHeight/10)* 7);
+
+  noStroke();
+  fill(penColor);
+  textSize(96);
+  text("Drawn Conclusion", windowWidth/2, windowHeight/4);
+  //allows for user to use the pen and see the ball drop on start screen
+  pen(500);
+  if (drop) {
+    start = false;
+    ballDrop(); 
+  }
+  if(start){
+    ballStart();
+    drop = false;
+  }
+
+}
+
+
+function levelSelect() {
+  textSize(64);
+  textAlign(CENTER, CENTER);
+  noStroke();
+  fill(penColor);
+  text("Select a Level", windowWidth/2, windowHeight/10);
+
+  for (let i = 0; i < levelButtons.length; i++ ) {
+    levelButtons[i].display();
+  }
+
+}
+
+function level() {
+  pen(200);
+  if(win) { 
+    drawingFlag = false;
+  }
+  if (drawingFlag){
+    drawFlag(windowWidth - 300, windowHeight -300);
+  }
+  //switches for when the ball drops
+  if (drop) {
+    start = false;
+    ballDrop();  
+  }
+  if(start){
+    ballStart();
+    drop = false;
+  }
+}
+
+function won () {
+
+}
+
+function lost() {
+
+}
+
+
+function mouseClicked() {
+  let goToLevel = 0;
+
+  //for changing from start screen when start button is pressed
+  let postitX = windowWidth/2;
+  let postitY = (windowHeight/10) * 7;
+  if (startScreenSwitch) {
+    if ((mouseX > (postitX - 100) && (mouseX < postitX + 100))) {
+      if ((mouseY > postitY - 100) && (mouseY < postitY + 100)) {
+        levelSelectSwitch = true;
+        startScreenSwitch = false;
+      }
+    }
+  }
+
+
+  if  (levelSelectSwitch) {
+    for (let i = 0; i < levelButtons.length; i ++) {
+      if ((mouseX > levelButtons[i].x - 25) && (mouseX < levelButtons[i].x + 25)) {
+        if ((mouseY > levelButtons[i].y -50) && (mouseY < levelButtons[i].y + 50)) {
+          goToLevel = levelButtons[i].level;
+        }
+      }   
+    }
+  }
+
+  if (goToLevel == 1) {
+    coordinates = [];
+    drop = false;
+    start = true;
+    level1Switch = true;
+    levelSelectSwitch = false;
+  }
+
+  if (goToLevel == 2) {
+    level2Switch = true;
+    levelSelectSwitch = false;
+  }
+
+  if (goToLevel == 3) {
+    level3Switch = true;
+    levelSelectSwitch = false;
+  }
+
+  if (goToLevel == 4) {
+    level4Switch = true;
+    levelSelectSwitch = false;
+  }
+
+  if (goToLevel == 5) {
+    level5Switch = true;
+    levelSelectSwitch = false;
+  }
+
+  if (goToLevel == 6) {
+    level6Switch = true;
+    levelSelectSwitch = false;
+  }
+
 }
