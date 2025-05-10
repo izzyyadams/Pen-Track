@@ -35,6 +35,8 @@ let level6Switch;
 let winnerSwitch;
 let loserSwitch;
 let levelButtons = [];
+let restartImage;
+let restartScreenSwitch;
 
 
 class levelButton {
@@ -102,6 +104,7 @@ function setup() {
   level4Switch = false;
   level5Switch = false;
   level6Switch = false;
+  restartScreenSwitch = false;
   
 
 
@@ -110,12 +113,19 @@ function setup() {
 function preload(){
   cursor =  loadImage('data/cursor.png'); //load cursor image
   mainFont = loadFont('data/Jua-Regular.ttf'); //loading font
+  restartImage = loadImage('data/restart.png')
 }
 
 
 
 function draw() {
   background(backgroundColor);
+
+  if (restartScreenSwitch) {
+    restartScreen();
+    restartScreenSwitch = false;
+  }
+
   if (startScreenSwitch){
     startScreen();
   }
@@ -276,6 +286,15 @@ function flagCrossed(prevPosition, currentPosition, point1, point2) {
   return sidePrev * sideCurr < 0; 
 }
 
+function restartScreen() {
+  coordinates = [];
+  drop = false;
+  start = true;
+  position = createVector(origBallX, origBallY); 
+  velocity = createVector(0,0); 
+  acceleration = createVector(0,0);
+}
+
 
 //function for start screem
 function startScreen() {
@@ -322,6 +341,7 @@ function levelSelect() {
 }
 
 function level() {
+  image(restartImage, windowWidth - 50, 25, 50, 50);
   pen(200);
   if(win) { 
     drawingFlag = false;
@@ -351,6 +371,9 @@ function lost() {
 
 function mouseClicked() {
   let goToLevel = 0;
+   if (dist(mouseX, mouseY, windowWidth - 50, 25) < 50) {
+     restartScreenSwitch = true;
+   }
 
   //for changing from start screen when start button is pressed
   let postitX = windowWidth/2;
@@ -376,9 +399,7 @@ function mouseClicked() {
   }
 
   if (goToLevel == 1) {
-    coordinates = [];
-    drop = false;
-    start = true;
+    restartScreen();
     level1Switch = true;
     levelSelectSwitch = false;
   }
