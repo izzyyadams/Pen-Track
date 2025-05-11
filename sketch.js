@@ -52,7 +52,9 @@ let winds = [];
 let windSound;
 let windSoundPlayed;
 let level4Inputs;
+let level5Inputs;
 let noDrawZones = [];
+let level6Inputs;
 
 
 
@@ -147,7 +149,10 @@ for (let i = 0; i < rows; i++) {
   }
 }
 
-noDrawZones.push(new noDrawingZone(windowWidth/2, windowHeight/2, 300, windowHeight));
+noDrawZones.push(new noDrawingZone(windowWidth/2, windowHeight/2, 140, windowHeight));
+noDrawZones.push(new noDrawingZone(windowWidth/4, windowHeight/2, 100, windowHeight));
+noDrawZones.push(new noDrawingZone(windowWidth/4 * 2, windowHeight/2, 100, windowHeight));
+noDrawZones.push(new noDrawingZone(windowWidth/2, windowHeight/2, 75, windowHeight))
 
   startScreenSwitch = true;
 
@@ -193,6 +198,9 @@ noDrawZones.push(new noDrawingZone(windowWidth/2, windowHeight/2, 300, windowHei
   level2Inputs = [(windowWidth/8)*3, windowHeight/3, (windowWidth/8)*5, (windowHeight/8)*3.1, 100, 0];
   level3Inputs = [(windowWidth/8)*2, windowHeight/3, (windowWidth/8)*5.5, (windowHeight/4)*3.5, 250, 0.07];
   level4Inputs = [(windowWidth/8)*2, windowHeight/3, (windowWidth/8)*5.5, (windowHeight/4)*3.5, 250, 0];
+  level5Inputs = [windowWidth/9, windowHeight/4, (windowWidth/8)*6, (windowHeight/4)*3.5, 250, 0];
+  level6Inputs = [windowWidth/4, windowHeight/4, (windowWidth/8)*5, (windowHeight/4)*3.5, 250, 0.06];
+
   winnerSwitch = false;
   windSoundPlayed = false;
 
@@ -231,11 +239,11 @@ function draw() {
     restartScreenSwitch4 = false;
   }
   if (restartScreenSwitch5) {
-    restartScreen();
+    restartScreen(level5Inputs[0], level5Inputs[1]);
     restartScreenSwitch5 = false;
   }
   if (restartScreenSwitch6) {
-    restartScreen();
+    restartScreen(level6Inputs[0], level6Inputs[1]);
     restartScreenSwitch6 = false;
   }
 
@@ -262,6 +270,13 @@ function draw() {
     level4();
   }
 
+  if(level5Switch) {
+    level5();
+  }
+
+  if(level6Switch) {
+    level6();
+  }
   
 
   if (winnerSwitch) {
@@ -285,18 +300,49 @@ function mouseDragged(){
   //mouseDragged works while button is pressed and mouse is moving
   //pushes mouse's coordinates onto array an array
   //general strategy of having the mouse draw used from class, but I am not directly looking at the code while wriitng this
-  if (
-    mouseX > noDrawZones[0].x - (noDrawZones[0].width/2) &&
-    mouseX < noDrawZones[0].x + (noDrawZones[0].width/2)
-    
-  ) {
-    print("HI");
-    return; 
-  }
+  if (level4Switch){
+    if (
+      mouseX > noDrawZones[0].x - (noDrawZones[0].width/2) &&
+      mouseX < noDrawZones[0].x + (noDrawZones[0].width/2)
+      
+    ) {
+      return; 
+    }
 
-  if(hasInk){
-    coordinates.push({x: mouseX, y: mouseY}); 
-    
+    if(hasInk){
+      coordinates.push({x: mouseX, y: mouseY}); 
+      
+    }
+  }else if(level5Switch){
+    if (
+     (mouseX > noDrawZones[1].x - (noDrawZones[1].width/2) &&
+      mouseX < noDrawZones[1].x + (noDrawZones[1].width/2)) || (mouseX > noDrawZones[2].x - (noDrawZones[2].width/2) &&
+      mouseX < noDrawZones[2].x + (noDrawZones[2].width/2))
+      
+    ) {
+      return; 
+    }
+
+    if(hasInk){
+      coordinates.push({x: mouseX, y: mouseY}); 
+      
+    }
+  }else if(level6Switch){
+    if(
+    mouseX > noDrawZones[3].x - (noDrawZones[3].width/2) &&
+    mouseX < noDrawZones[3].x + (noDrawZones[3].width/2)
+    ) {
+      return;
+    }
+    if(hasInk){
+      coordinates.push({x: mouseX, y: mouseY}); 
+      
+    }
+  }else{
+    if(hasInk){
+      coordinates.push({x: mouseX, y: mouseY}); 
+      
+    }
   }
 }
 
@@ -313,6 +359,7 @@ function ballDrop(wind) {
     //strategy is to make a line segment between each point, find the point on this line segment that ball is closest too, and then see if they collide
     let point1 = createVector(coordinates[i].x, coordinates[i].y); //create a vector for the point at 1
     let point2 = createVector(coordinates[i+1].x, coordinates[i+1].y); //create a vector for the point next to i
+    if (point1.dist(point2) > 50) continue;
     let lineSegment = point2.copy().sub(point1); //vector between point 1 and point 2
     let distanceToLine = position.copy().sub(point1); //used to find where the ball is relative to the first point of the line segment
     //scalar projection formula: (a dot b) / magnitude of b 
@@ -480,15 +527,15 @@ function startScreen() {
   textSize(96);
   text("Drawn Conclusion", windowWidth/2, windowHeight/4);
   //allows for user to use the pen and see the ball drop on start screen
-  pen(500);
-  if (drop) {
-    start = false;
-    ballDrop(0); 
-  }
-  if(start){
-    ballStart();
-    drop = false;
-  }
+  // // pen(500);
+  // // if (drop) {
+  // //   start = false;
+  // //   ballDrop(0); 
+  // // }
+  // // if(start){
+  // //   ballStart();
+  // //   drop = false;
+  // // }
 
 }
 
@@ -522,8 +569,18 @@ function level3() {
 function level4() {
   noDrawZones[0].display();
   level(level4Inputs[0], level4Inputs[1], level4Inputs[2], level4Inputs[3], level4Inputs[4], level4Inputs[5]);
-  
 
+}
+
+function level5() {
+  noDrawZones[1].display();
+  noDrawZones[2].display();
+  level(level5Inputs[0], level5Inputs[1], level5Inputs[2], level5Inputs[3], level5Inputs[4], level5Inputs[5]);
+}
+
+function level6() {
+  noDrawZones[3].display();
+  level(level6Inputs[0], level6Inputs[1], level6Inputs[2], level6Inputs[3], level6Inputs[4], level6Inputs[5]);
 }
 
 function level(ballX, ballY, flagX, flagY, inkLimit, wind) {
@@ -669,11 +726,13 @@ function mouseClicked() {
   }
 
   if (goToLevel == 5) {
+    restartScreenSwitch5 = true;
     level5Switch = true;
     levelSelectSwitch = false;
   }
 
   if (goToLevel == 6) {
+    restartScreenSwitch6 = true;
     level6Switch = true;
     levelSelectSwitch = false;
   }
