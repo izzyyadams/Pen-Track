@@ -58,7 +58,7 @@ let level6Inputs;
 
 
 
-class levelButton {
+class levelButton { //this class is for the level select buttons, made it easy to store the levels with their index in the array of these objects
   constructor(x, y, level) {
     this.x = x;
     this.y = y;
@@ -94,9 +94,10 @@ class windStreak {
   }
 
   update() {
-    this.x -= this.speed;
+    this.x -= this.speed; //wind streaks move across screen
+    //wind streaks wrap around screen logic
     if (this.x > windowWidth + this.lengthy) {
-      this.x = -this.lengthy;
+      this.x == -this.lengthy; 
     }
     if (this.x < -this.lengthy) {
       this.x = windowWidth + this.lengthy;
@@ -107,6 +108,7 @@ class windStreak {
 }
 
 class noDrawingZone {
+  //visible red no drawing zone
   constructor(x, y, width, height) {
     this.x = x;
     this.y = y;
@@ -126,39 +128,34 @@ function setup() {
   noCursor(); //hide standard cursor
   createCanvas(windowWidth, windowHeight);
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 10; i++) { //creates the random wind streaks that will be used on wind levels using their constructor
     winds.push(new windStreak);
   }
 
-let rows = 2; 
-let cols = 3;
-let spacing = 200; // spacing horizontally and vertically between level boxes
-
-let gridWidth = (cols - 1) * spacing; //need this to not hard code coorindates
-let gridHeight = (rows - 1) * spacing;
-
-let startX = windowWidth / 2 - gridWidth / 2; //center of screen minus half the width of the grid is the starting point for it to be centered
-let startY = windowHeight / 2 - gridHeight / 2;
-
-for (let i = 0; i < rows; i++) {
-  for (let j = 0; j < cols; j++) {
-    let x = startX + j * spacing; //column spacing
-    let y = startY + i * spacing; //row spacing
-    let levelNum = i * cols + j + 1; //index of level +1 because indexing starts at 0
-    levelButtons.push(new levelButton(x, y, levelNum));
+  // used to create the small grid of the level select buttons
+  let rows = 2;
+  let cols = 3;
+  let spacing = 200; // spacing horizontally and vertically between level boxes
+  let gridWidth = (cols - 1) * spacing; //need this to not hard code coorindates
+  let gridHeight = (rows - 1) * spacing;
+  let startX = (windowWidth/2) - (gridWidth/2); //center of screen minus half the width of the grid is the starting point for it to be centered
+  let startY = (windowHeight/2) - (gridHeight/2);
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      let levelNum = i*cols+j+1; //index of level +1 because indexing starts at 0
+      levelButtons.push(new levelButton(startX+j*spacing, startY+i*spacing, levelNum));
+    }
   }
-}
 
-noDrawZones.push(new noDrawingZone(windowWidth/2, windowHeight/2, 140, windowHeight));
-noDrawZones.push(new noDrawingZone(windowWidth/4, windowHeight/2, 100, windowHeight));
-noDrawZones.push(new noDrawingZone(windowWidth/4 * 2, windowHeight/2, 100, windowHeight));
-noDrawZones.push(new noDrawingZone(windowWidth/2, windowHeight/2, 75, windowHeight))
-
-  startScreenSwitch = true;
+  //adding the new draw zones to the array, indices used later by different levels to access certain draw zones
+  noDrawZones.push(new noDrawingZone(windowWidth/2, windowHeight/2, 140, windowHeight));
+  noDrawZones.push(new noDrawingZone(windowWidth/4, windowHeight/2, 100, windowHeight));
+  noDrawZones.push(new noDrawingZone(windowWidth/4 * 2, windowHeight/2, 100, windowHeight));
+  noDrawZones.push(new noDrawingZone(windowWidth/2, windowHeight/2, 75, windowHeight))
 
 
-  win = false;
-
+  startScreenSwitch = true; //shpuld start with only the start screen on
+  win = false; //starts with haven't won
   backgroundColor = color(233, 224, 217); //off-white
   penColor = color(0, 173, 239); //blue
   ballColor = color(237, 0, 140); //pink
@@ -178,50 +175,49 @@ noDrawZones.push(new noDrawingZone(windowWidth/2, windowHeight/2, 75, windowHeig
   gravity = createVector(0, 0.2); // no x change, but y has downward force
   indexOfBall = 0; //will be used to see if ball is hitting path
   upwardForce = createVector(0, 0.2); //resulting from drawn line
-  prevPosition = position.copy();
-  drawingFlag = true;
-  level1Switch = false;
+  prevPosition = position.copy(); //initializing vector that will be later used to see if ball crossed flag
+  drawingFlag = false; //no flag on start screen
+  level1Switch = false; //none of the levels should be active to start
   level2Switch = false;
   level3Switch = false;
   level4Switch = false;
   level5Switch = false;
   level6Switch = false;
-  restartScreenSwitch1 = false;
+  restartScreenSwitch1 = false; //levels are reset when they are switched on
   restartScreenSwitch2 = false;
   restartScreenSwitch3 = false;
   restartScreenSwitch4 = false;
   restartScreenSwitch5 = false;
   restartScreenSwitch6 = false;
-  soundPlayed = false;
-  startTime = 0;
+  soundPlayed = false; //win sound hasn't been played yet
+  startTime = 0; //timer for how long win screen appears
+
+  //all the inputs to call the level function with
+  //includes ball start position, flag start position, ink amount, and wind amount
   level1Inputs = [windowWidth/8, windowHeight/4, (windowWidth/8)*6, (windowHeight/4)*3, 250, 0];
   level2Inputs = [(windowWidth/8)*3, windowHeight/3, (windowWidth/8)*5, (windowHeight/8)*3.1, 100, 0];
   level3Inputs = [(windowWidth/8)*2, windowHeight/3, (windowWidth/8)*5.5, (windowHeight/4)*3.5, 250, 0.07];
   level4Inputs = [(windowWidth/8)*2, windowHeight/3, (windowWidth/8)*5.5, (windowHeight/4)*3.5, 250, 0];
   level5Inputs = [windowWidth/9, windowHeight/4, (windowWidth/8)*6, (windowHeight/4)*3.5, 250, 0];
   level6Inputs = [windowWidth/4, windowHeight/4, (windowWidth/8)*5, (windowHeight/4)*3.5, 250, 0.06];
-
-  winnerSwitch = false;
-  windSoundPlayed = false;
-
-
+  winnerSwitch = false; //winner screen switch
+  windSoundPlayed = false; //wind sound hasn't played yet
 
 }
-
 function preload(){
   cursor =  loadImage('data/cursor.png'); //load cursor image
   mainFont = loadFont('data/Jua-Regular.ttf'); //loading font
-  restartImage = loadImage('data/restart.png');
-  homeImage = loadImage('data/house.png');
-  winSound = loadSound('data/winSound.mp3');
-  windSound = loadSound('data/wind.mp3');
+  restartImage = loadImage('data/restart.png'); //load restart button image
+  homeImage = loadImage('data/house.png'); //load home button image
+  winSound = loadSound('data/winSound.mp3'); //load winner sound
+  windSound = loadSound('data/wind.mp3'); //load wind sound
 }
-
-
-
 function draw() {
   background(backgroundColor);
 
+  //if restart screens turned on, call restartscreen funtion with the ball's inital position
+  //then turn it off so it is not constantly resetting
+  //had to have a different one for each level because of the ball's starting position
   if (restartScreenSwitch1) {
     restartScreen(level1Inputs[0], level1Inputs[1]);
     restartScreenSwitch1 = false;
@@ -247,101 +243,81 @@ function draw() {
     restartScreenSwitch6 = false;
   }
 
+
+//if switches turn on, call function
   if (startScreenSwitch){
     startScreen();
   }
-
   if (levelSelectSwitch){
     levelSelect();
   }
-
   if (level1Switch) {
     level1();
   }
   if (level2Switch) {
     level2();
   }
-
   if (level3Switch) {
     level3();
   }
-
   if(level4Switch) {
     level4();
   }
-
   if(level5Switch) {
     level5();
   }
-
   if(level6Switch) {
     level6();
   }
-  
-
   if (winnerSwitch) {
     won();
-    
-    elapsedTime = (millis() - startTime) /1000;
-    if (elapsedTime >= 3) {
-      levelSelectSwitch = true;
+    //timing for how long winner screen appears
+    elapsedTime = (millis() - startTime) /1000; // /1000 for seconds
+    if (elapsedTime >= 3) { //after 3 seconds
+      levelSelectSwitch = true; 
       winnerSwitch = false;
-      win = false;
+      win = false; //reset win variable
     }
 
   }
-  image(cursor, mouseX - 20, mouseY); //draw cursor image at user's mouse
-  
-  
 
+  image(cursor, mouseX - 20, mouseY); //draw cursor image at user's mouse
 }
+
 
 function mouseDragged(){
   //mouseDragged works while button is pressed and mouse is moving
   //pushes mouse's coordinates onto array an array
   //general strategy of having the mouse draw used from class, but I am not directly looking at the code while wriitng this
+  
+  //probaably could have used another function to do this
+  //need this for the no draw zones of different levels
+  //mousedragged stops while over the nodrawzones
   if (level4Switch){
-    if (
-      mouseX > noDrawZones[0].x - (noDrawZones[0].width/2) &&
-      mouseX < noDrawZones[0].x + (noDrawZones[0].width/2)
-      
-    ) {
-      return; 
+    if ((mouseX > noDrawZones[0].x - (noDrawZones[0].width/2)) && (mouseX < noDrawZones[0].x + (noDrawZones[0].width/2))) {
+      return; //breaks instead of drawing
     }
-
     if(hasInk){
       coordinates.push({x: mouseX, y: mouseY}); 
-      
     }
   }else if(level5Switch){
-    if (
-     (mouseX > noDrawZones[1].x - (noDrawZones[1].width/2) &&
-      mouseX < noDrawZones[1].x + (noDrawZones[1].width/2)) || (mouseX > noDrawZones[2].x - (noDrawZones[2].width/2) &&
-      mouseX < noDrawZones[2].x + (noDrawZones[2].width/2))
-      
-    ) {
+    if ((((mouseX > noDrawZones[1].x - (noDrawZones[1].width/2)) &&
+      (mouseX < noDrawZones[1].x + (noDrawZones[1].width/2)))) || ((mouseX > noDrawZones[2].x - (noDrawZones[2].width/2) && (mouseX < noDrawZones[2].x + (noDrawZones[2].width/2))))) {
       return; 
     }
-
     if(hasInk){
       coordinates.push({x: mouseX, y: mouseY}); 
-      
     }
   }else if(level6Switch){
-    if(
-    mouseX > noDrawZones[3].x - (noDrawZones[3].width/2) &&
-    mouseX < noDrawZones[3].x + (noDrawZones[3].width/2)
-    ) {
+    if((mouseX > noDrawZones[3].x - (noDrawZones[3].width/2)) && (mouseX < noDrawZones[3].x + (noDrawZones[3].width/2))) {
       return;
     }
     if(hasInk){
       coordinates.push({x: mouseX, y: mouseY}); 
-      
     }
   }else{
     if(hasInk){
-      coordinates.push({x: mouseX, y: mouseY}); 
-      
+      coordinates.push({x: mouseX, y: mouseY});  
     }
   }
 }
@@ -359,7 +335,9 @@ function ballDrop(wind) {
     //strategy is to make a line segment between each point, find the point on this line segment that ball is closest too, and then see if they collide
     let point1 = createVector(coordinates[i].x, coordinates[i].y); //create a vector for the point at 1
     let point2 = createVector(coordinates[i+1].x, coordinates[i+1].y); //create a vector for the point next to i
-    if (point1.dist(point2) > 50) continue;
+    if (point1.dist(point2)>50){
+      continue; //only act like a line segment if they are close enough to do so
+    } 
     let lineSegment = point2.copy().sub(point1); //vector between point 1 and point 2
     let distanceToLine = position.copy().sub(point1); //used to find where the ball is relative to the first point of the line segment
     //scalar projection formula: (a dot b) / magnitude of b 
@@ -371,10 +349,8 @@ function ballDrop(wind) {
       acceleration.sub(upwardForce); //acceleration gains an upwards force from the line
       //also need to calculate sliding force down the line
       let lineSegmentDirection = lineSegment.copy().normalize(); //gets only the direction of the line segement between point1 and point2
-      let slidingForce = lineSegmentDirection.mult(gravity.dot(lineSegmentDirection)); //projecting gravity onto direction of the line segment to have it push down and to the side downt the line instead of just down
-      acceleration.add(slidingForce);
-
-
+      let sliding = lineSegmentDirection.mult(gravity.dot(lineSegmentDirection)); //projecting gravity onto direction of the line segment to have it push down and to the side downt the line instead of just down
+      acceleration.add(sliding);
       //the shortest vector that can separate two colliding objects so ball doesn't go into line
       //i used this video for basic concept, but not code since it was about when morethan one object could move
       //https://youtu.be/9IULfQH7E90?feature=shared 1:00 - 1:20
@@ -388,10 +364,9 @@ function ballDrop(wind) {
       position.add(pushBack);
     }
   }
-  
+  //horizontal force that pushes opposite of ball
   let windVector = createVector(-wind, 0);
   acceleration.add(windVector);
-
   acceleration.add(gravity); //ball acclerates due to gravity
   velocity.add(acceleration); //ball's speed changes based on accleration
   velocity.mult(0.99); //air resistance OR path resitance, velocity would naturally slow down over time
@@ -401,7 +376,6 @@ function ballDrop(wind) {
   fill(ballColor);
   stroke(ballColor);
   circle(position.x, position.y, ballSize); //draws ball at correct position
-
 }
 
 function pen(inkLimit) {
@@ -430,13 +404,8 @@ function drawFlag(startX, startY) {
   line(startX, startY, startX, poleHeight);
   stroke(flagColor);
   triangle(startX, poleHeight, startX, poleHeight + 25, startX + 50, poleHeight + 12);
-
-
   //CHECK IF BALL CROSSES
   win = flagCrossed(prevPosition, position, createVector(startX, startY + 50), createVector(startX, poleHeight));
-
-  
-
 }
 
 function inkContainer(inkLimit) {
@@ -458,12 +427,7 @@ function inkContainer(inkLimit) {
     //starting corner should move down as ink is lost
     rect(containerX, containerY + ((coordinates.length)/inkLimit) * containerHeight, containerWidth, inkHeight, 20);
   }
-
-
-
 }
-
-
 
 function flagCrossed(prevPosition, currentPosition, point1, point2) {
   // find which of line ball was on previously
@@ -487,29 +451,24 @@ function flagCrossed(prevPosition, currentPosition, point1, point2) {
   let prevToBottom = point2.copy().sub(prevPosition); //previous position posotion to bottom point of flag
   let inA = ballsMovement.x * prevToTop.y - ballsMovement.y * prevToTop.x; //should be pointing up to top
   let inB = ballsMovement.x * prevToBottom.y - ballsMovement.y * prevToBottom.x; //should be pointing down to bottom
-
   let segementsCross = inA * inB < 0; //if oppsoite then must be inbetween the 2 points (in the flag segment)
-
-
-  return lineCrossed && segementsCross;
+  return lineCrossed && segementsCross; //true or false
 }
 
 function restartScreen(origBallX, origBallY) {
-  position = createVector(origBallX, origBallY); 
-  velocity = createVector(0,0); 
-  acceleration = createVector(0,0);
-  coordinates = [];
-  win = false;
+  position = createVector(origBallX, origBallY); //resets ball to orig position
+  velocity = createVector(0,0); //resets balls velocity to 0
+  acceleration = createVector(0,0); //resets ball acceleration to 0
+  coordinates = []; //empty list that tracked where line should be drawn
+  win = false; 
   drop = false;
   drawingFlag = true;
   start = true;
   hasInk = true;
-  soundPlayed = false;
-
+  soundPlayed = false; //allows sound to play again
+  windSoundPlayed = false;
 }
 
-
-//function for start screem
 function startScreen() {
   textFont(mainFont);
   textAlign(CENTER, CENTER);
@@ -521,24 +480,12 @@ function startScreen() {
   textSize(48);
   fill(ballColor);
   text("START", windowWidth/2, (windowHeight/10)* 7);
-
   noStroke();
   fill(penColor);
   textSize(96);
   text("Drawn Conclusion", windowWidth/2, windowHeight/4);
-  //allows for user to use the pen and see the ball drop on start screen
-  // // pen(500);
-  // // if (drop) {
-  // //   start = false;
-  // //   ballDrop(0); 
-  // // }
-  // // if(start){
-  // //   ballStart();
-  // //   drop = false;
-  // // }
 
 }
-
 
 function levelSelect() {
   textSize(64);
@@ -550,57 +497,52 @@ function levelSelect() {
   for (let i = 0; i < levelButtons.length; i++ ) {
     levelButtons[i].display();
   }
-
 }
 
+//calling all of the levels with the arrays made in setup
+//levels with no draw zones all display the appropriate objects
 function level1() {
   level(level1Inputs[0], level1Inputs[1], level1Inputs[2], level1Inputs[3], level1Inputs[4], level1Inputs[5]);
-
 }
-
 function level2() {
   level(level2Inputs[0], level2Inputs[1], level2Inputs[2], level2Inputs[3], level2Inputs[4], level2Inputs[5]);
 }
-
 function level3() {
   level(level3Inputs[0], level3Inputs[1], level3Inputs[2], level3Inputs[3], level3Inputs[4], level3Inputs[5]);
 }
-
 function level4() {
   noDrawZones[0].display();
   level(level4Inputs[0], level4Inputs[1], level4Inputs[2], level4Inputs[3], level4Inputs[4], level4Inputs[5]);
-
 }
-
 function level5() {
   noDrawZones[1].display();
   noDrawZones[2].display();
   level(level5Inputs[0], level5Inputs[1], level5Inputs[2], level5Inputs[3], level5Inputs[4], level5Inputs[5]);
 }
-
 function level6() {
   noDrawZones[3].display();
   level(level6Inputs[0], level6Inputs[1], level6Inputs[2], level6Inputs[3], level6Inputs[4], level6Inputs[5]);
 }
 
 function level(ballX, ballY, flagX, flagY, inkLimit, wind) {
+  //generic code that happens for every level
   if (wind > 0) {
+    //if there is a wind factor, display the winds from the array of objects and play the wind sound. need the !windsound plays or it starts playing infinetly
     for (let i = 0; i < winds.length; i ++ ) {
       winds[i].display();
       winds[i].update();
-      
     }
     if (!windSoundPlayed) {
       windSound.loop();
     }
     windSoundPlayed = true;
   }
+  //display ux buttons
   image(restartImage, windowWidth - 75, 25, 50, 50);
   image(homeImage, 50, 25, 50, 50)
+  //starts the pen
   pen(inkLimit);
   
-  
-
   //switches for when the ball drops
   if (drop) {
     start = false;
@@ -611,13 +553,15 @@ function level(ballX, ballY, flagX, flagY, inkLimit, wind) {
     drop = false;
   }
 
+  //need a switch because it dissappears when you win
   if (drawingFlag){
     drawFlag(flagX, flagY);
   }
 
   if(win & !soundPlayed) { 
-    startTime = millis();
-    winSound.play();
+    startTime = millis(); //start timer for how long winning screen shows
+    winSound.play(); //play the wind sound
+    //have to turn all level switches off since the level() function is used for every level
     soundPlayed = true;
     drawingFlag = false;
     winnerSwitch = true;
@@ -631,22 +575,20 @@ function level(ballX, ballY, flagX, flagY, inkLimit, wind) {
   } 
 }
 
-function won () {
+function won () { //plays when you beat a level
   background(flagColor);
   noStroke();
   fill(255, 255, 255);
   textAlign(CENTER, CENTER);
   text("YOU WON!", windowWidth/2, windowHeight/3);
-  
-
 }
-
-
 
 function mouseClicked() {
   let goToLevel = 0;
-  if (!startScreenSwitch){
-   if (dist(mouseX, mouseY, windowWidth - 75, 25) < 50) {
+  if (!startScreenSwitch){ //buttons don't appear on start screen
+   if (dist(mouseX, mouseY, windowWidth - 75, 25) < 50) { //restart button pressed
+
+    //restarts screen based on what level you are currently on
     if (level1Switch){
      restartScreenSwitch1 = true;
     }
@@ -666,6 +608,7 @@ function mouseClicked() {
      restartScreenSwitch6 = true;
     }
    }
+
    if (dist(mouseX, mouseY, 50, 25) < 50) {
      levelSelectSwitch = true;
      level1Switch = false;
@@ -675,68 +618,74 @@ function mouseClicked() {
      level5Switch = false;
      level6Switch = false;
      windSound.stop();
+     windSoundPlayed = false;
    }
   }
 
   //for changing from start screen when start button is pressed
-  let postitX = windowWidth/2;
+  let postitX = windowWidth/2; //start button coordinates
   let postitY = (windowHeight/10) * 7;
   if (startScreenSwitch) {
-    if ((mouseX > (postitX - 100) && (mouseX < postitX + 100))) {
-      if ((mouseY > postitY - 100) && (mouseY < postitY + 100)) {
+    if ((mouseX > (postitX - 100) && (mouseX < postitX + 100))) { //checks x
+      if ((mouseY > postitY - 100) && (mouseY < postitY + 100)) {  //checks y
         levelSelectSwitch = true;
         startScreenSwitch = false;
       }
     }
   }
 
-
   if  (levelSelectSwitch) {
+    //filters through the level select buttons and checks each ones coordinates to see which one you are at
     for (let i = 0; i < levelButtons.length; i ++) {
       if ((mouseX > levelButtons[i].x - 25) && (mouseX < levelButtons[i].x + 25)) {
         if ((mouseY > levelButtons[i].y -50) && (mouseY < levelButtons[i].y + 50)) {
-          goToLevel = levelButtons[i].level;
+          goToLevel = levelButtons[i].level; //sets which level to go to variable to be used below
         }
       }   
     }
   }
 
-  if (goToLevel == 1) {
-    restartScreenSwitch1 = true;
-    level1Switch = true;
-    levelSelectSwitch = false;
-  }
+  if(goToLevel > 0) {
+    //restarts the level when you enter it
+    //turns on appropriate level switch 
+    //turns off level select switch
+    if (goToLevel == 1) {
+      restartScreenSwitch1 = true;
+      level1Switch = true;
+      levelSelectSwitch = false;
+    }
 
-  if (goToLevel == 2) {
-    restartScreenSwitch2 = true;
-    level2Switch = true;
-    levelSelectSwitch = false;
-  }
+    if (goToLevel == 2) {
+      restartScreenSwitch2 = true;
+      level2Switch = true;
+      levelSelectSwitch = false;
+    }
 
-  if (goToLevel == 3) {
-    restartScreenSwitch3 = true;
-    level3Switch = true;
-    levelSelectSwitch = false;
-  }
+    if (goToLevel == 3) {
+      restartScreenSwitch3 = true;
+      level3Switch = true;
+      levelSelectSwitch = false;
+    }
 
-  if (goToLevel == 4) {
-    restartScreenSwitch4 = true;
-    level4Switch = true;
-    levelSelectSwitch = false;
-  }
+    if (goToLevel == 4) {
+      restartScreenSwitch4 = true;
+      level4Switch = true;
+      levelSelectSwitch = false;
+    }
 
-  if (goToLevel == 5) {
-    restartScreenSwitch5 = true;
-    level5Switch = true;
-    levelSelectSwitch = false;
-  }
+    if (goToLevel == 5) {
+      restartScreenSwitch5 = true;
+      level5Switch = true;
+      levelSelectSwitch = false;
+    }
 
-  if (goToLevel == 6) {
-    restartScreenSwitch6 = true;
-    level6Switch = true;
-    levelSelectSwitch = false;
-  }
+    if (goToLevel == 6) {
+      restartScreenSwitch6 = true;
+      level6Switch = true;
+      levelSelectSwitch = false;
+    }
 
+  }
 }
 
 
